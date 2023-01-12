@@ -1,0 +1,15 @@
+version: '3'
+services:
+  redis-standalone:
+    image: redis:6.2.8
+    container_name: redis-7001
+    hostname: redis-7001
+    labels:
+      - "name=redis"
+      - "mode=standalone"
+    ports:
+      - 7001:7001
+    volumes:
+      - ./data/redis/7001:/data
+      - ./data/redis7001.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf --port 7001

@@ -1,0 +1,19 @@
+redis:
+  cache:
+    env: local
+    nodes: localhost:6379,localhost:6380,localhost:6381
+    command-timeout: 2
+    connection-timeout: 2
+    use-redis-as-cache: true
+  cache-ttl:
+    default-ttl: 60
+    cache-names-ttl:
+      getAllOrders: 300
+
+
+logging:
+  level:
+    pe.redis: INFO
+    org.springframework: INFO
+    org.springframework.data.redis: TRACE
+    org.springframework.cache: TRACE

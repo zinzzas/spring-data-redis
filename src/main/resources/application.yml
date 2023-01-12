@@ -1,0 +1,24 @@
+server:
+  port: 9090
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: boot-redis
+  profiles:
+    active: local #spring.profiles.active 설정값이 없는 경우 (default)
+  main:
+    allow-bean-definition-overriding: true  #spring bean 재정의 활성화 (3rd party spring lib name conflict)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+  jta:
+    enabled: false
+  messages:
+    basename: messages/messages
+  web:
+    locale: ko_KR
+    locale-resolver: fixed

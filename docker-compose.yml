@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+    redis-master:
+      image: redis:6.2.8
+      container_name: redis-6379
+      restart: always
+      ports:
+        - 6379:6379
+        - 6380:6380
+        - 6381:6381
+      volumes:
+        - ./data/redis/6379:/data
+        - ./data/redis.conf:/usr/local/etc/redis/redis.conf
+      command: redis-server /usr/local/etc/redis/redis.conf
+
+    redis-slave1:
+      image: redis:6.2.8
+      container_name: redis-6380
+      network_mode: "service:redis-master"
+      restart: always
+      volumes:
+        - ./data/redis/6380:/data
+        - ./data/redis6380.conf:/usr/local/etc/redis/redis.conf
+      command: redis-server /usr/local/etc/redis/redis.conf
+
+    redis-slave2:
+      image: redis:6.2.8
+      container_name: redis-6381
+      network_mode: "service:redis-master"
+      restart: always
+      volumes:
+        - ./data/redis/6381:/data
+        - ./data/redis6381.conf:/usr/local/etc/redis/redis.conf
+      command: redis-server /usr/local/etc/redis/redis.conf
+
+    redis-cluster-entry:
+      image: redis:6.2.8
+      container_name: redis-cluster-entry
+      network_mode: "service:redis-master"
+      command: redis-cli --cluster create 127.0.0.1:6379 127.0.0.1:6380 127.0.0.1:6381 --cluster-yes
+      depends_on:
+        - redis-master
+        - redis-slave1
+        - redis-slave2
