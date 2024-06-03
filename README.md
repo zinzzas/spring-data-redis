@@ -36,8 +36,9 @@ appendfilename "appendonly.aof"
 aof-load-truncated yes
 ```
 
-lazyfree 옵션 ON
-- 레디스는 default 싱글 쓰레드로 동작하기에 많은 트래픽 유입시 블락될 상황에 대비해 백그라운드에서 수행되도록 설정
+lazyfree parameter yes
+- 레디스는 default 싱글 쓰레드로 동작하기에 많은 트래픽 유입시 블락될 상황에 대비해 lazyfree 쓰레드가 백그라운드로 동작하여 키를 삭제하기 때문에, 레디스는 서버 키 삭제가 완료될 때 까지 기다리지 않고 다음 operation을 실행하기 때문에 응답 속도가 빨라짐
+- LAZYFREE 파라미터는 5개가 있고, 레디스 서버 4.0에서 4개, 6.0에서 1개가 추가되었음.
 ```
 lazyfree-lazy-eviction yes
 lazyfree-lazy-expire yes
