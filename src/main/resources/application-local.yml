@@ -13,6 +13,8 @@ redis:
 
 logging:
   level:
+    io:
+      lettuce: INFO
     pe.redis: INFO
     org.springframework: INFO
     org.springframework.data.redis: TRACE

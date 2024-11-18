@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
+import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,10 +43,15 @@ public class RedisManagerConfiguration {
 
     final SocketOptions socketOptions = SocketOptions.builder()
                                                      .connectTimeout(Duration.ofSeconds(redisCacheProperties.getCache().getConnectionTimeout())).build();
-    final ClientOptions clientOptions = ClientOptions.builder()
-                                                     .socketOptions(socketOptions).build();
+
+    final ClusterClientOptions clusterClientOptions = ClusterClientOptions.builder()
+        .topologyRefreshOptions(getClusterClientOptions())
+        .socketOptions(socketOptions)
+        .validateClusterNodeMembership(false)
+        .build();
+
     LettuceClientConfiguration clientConfiguration = LettuceClientConfiguration.builder()
-                                                                               .clientOptions(clientOptions)
+                                                                               .clientOptions(clusterClientOptions)
                                                                                .commandTimeout(Duration.ofSeconds(redisCacheProperties.getCache().getConnectionTimeout())).build();
 
     RedisClusterConfiguration redisClusterConfiguration = new RedisClusterConfiguration(Collections.singleton(redisCacheProperties.getCache().getNodes()));
@@ -94,10 +101,29 @@ public class RedisManagerConfiguration {
                                       .activateDefaultTyping(ptv, DefaultTyping.NON_FINAL);
   }
 
-  public ObjectMapper objectMappers() {
+  private ObjectMapper objectMappers() {
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     mapper.activateDefaultTyping(mapper.getPolymorphicTypeValidator(), DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
     return mapper;
   }
+
+  /**
+   * enablePeriodicRefresh(): 지정한 시간마다 클러스터 구성 정보를 가져와서 업데이트한다. 노드가 추가/삭제되었거나, 노드 다운으로 역할 변경(마스터 -> 복제(replica)),
+   *  슬롯이 이동했을 경우 등 클러스터 구성 정보가 변경되었을 경우 최신 정보로 업데이트해야 한다.
+   *  노드가 많을 경우 너무 짧은 시간을 지정하면 refresh 부하가 발생할 수 있다.
+   * enableAllAdaptiveRefreshTriggers : 문제가 되는 Operation 발생시 커넥션을 갱신시켜주는 트리거 발생시킴
+   * setReadFrom(ReadFrom.SLAVE): 이렇게 설정하면 get 같은 조회 명령은 복제(replica) 노드에서 실행된다.
+   * 마스터/복제(replica)간 부하 분산(Load-Balancing)을 할 수 있다.
+   *
+   * @return
+   */
+  private ClusterTopologyRefreshOptions getClusterClientOptions() {
+        return ClusterTopologyRefreshOptions.builder()
+                .dynamicRefreshSources(true)                                  // default: true
+                .enablePeriodicRefresh(Duration.ofSeconds(60))
+                .enableAllAdaptiveRefreshTriggers()
+                .adaptiveRefreshTriggersTimeout(Duration.ofSeconds(30))       // default: 30초
+                .build();
+    }
 }
