@@ -42,7 +42,9 @@ public class RedisManagerConfiguration {
   public LettuceConnectionFactory redisConnectionFactory(RedisCacheProperties redisCacheProperties) {
 
     final SocketOptions socketOptions = SocketOptions.builder()
-                                                     .connectTimeout(Duration.ofSeconds(redisCacheProperties.getCache().getConnectionTimeout())).build();
+                                                     .keepAlive(true) 
+                                                     .connectTimeout(Duration.ofSeconds(redisCacheProperties.getCache().getConnectionTimeout()))
+                                                     .build();
 
     final ClusterClientOptions clusterClientOptions = ClusterClientOptions.builder()
         .topologyRefreshOptions(getClusterClientOptions())
